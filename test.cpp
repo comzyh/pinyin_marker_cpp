@@ -19,6 +19,7 @@ int main() {
     acm.insert(line.first, line.second);
     // break;
   }
+  cout << acm.nodes.size() << endl;
   cout << "Building." << endl;
   acm.build();
   cout << "Build finish." << endl;
