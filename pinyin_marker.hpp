@@ -61,26 +61,28 @@ public:
       }
     });
   }
-};
-std::pair<std::u32string, PinyinUnit<std::string> > parseline(const std::u32string &line) {
-  size_t p1 = line.find('|');
-  size_t p2 = line.find('|', p1 + 1);
+  static std::pair<std::u32string, PinyinUnitType> parseline(const std::u32string &line) {
+    size_t p1 = line.find('|');
+    size_t p2 = line.find('|', p1 + 1);
 
-  int freq;
-  sscanf(converter.to_bytes(line.substr(p2 + 1, line.length() - p2 - 1)).c_str(),"%d", &freq);
+    int freq;
+    sscanf(converter.to_bytes(line.substr(p2 + 1, line.length() - p2 - 1)).c_str(),"%d", &freq);
 
-  // parse pinyin
-  std::u32string pinyin_block = line.substr(p1 + 1, p2 - p1 - 1);
-  std::vector<std::string> pinyin;
-  size_t begin = 0;
-  for (size_t i = pinyin_block.find(' '); i != std::u32string::npos; i = pinyin_block.find(' ', i + 1)) {
-    pinyin.push_back( converter.to_bytes(pinyin_block.substr(begin, i - begin)));
-    begin = i + 1;
+    // parse pinyin
+    std::u32string pinyin_block = line.substr(p1 + 1, p2 - p1 - 1);
+    std::vector<std::string> pinyin;
+    size_t begin = 0;
+    for (size_t i = pinyin_block.find(' '); i != std::u32string::npos; i = pinyin_block.find(' ', i + 1)) {
+      pinyin.push_back( converter.to_bytes(pinyin_block.substr(begin, i - begin)));
+      begin = i + 1;
+    }
+    pinyin.push_back(converter.to_bytes(pinyin_block.substr(begin, pinyin_block.length() - begin)));
+    //
+    return std::make_pair(std::u32string(line, 0, p1),PinyinUnitType(std::move(pinyin), freq));
   }
-  pinyin.push_back(converter.to_bytes(pinyin_block.substr(begin, pinyin_block.length() - begin)));
-  //
-  return std::make_pair(std::u32string(line, 0, p1),PinyinUnit<std::string>(std::move(pinyin), freq));
-}
+};
+
+
 }
 
 #endif
