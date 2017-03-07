@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 #include <queue>
+#include <functional>
 namespace pinyin_marker {
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 
@@ -53,17 +54,18 @@ struct Automation {
         nodes.resize(2);
     }
     void insert(const std::u32string &str, const PinyinUnit &unit) {
-        size_t current = 0;
+        size_t current = 1;
         for (auto chr = str.begin(); chr != str.end(); chr ++) {
             auto next = nodes[current].nexts.find(*chr);
             if (next == nodes[current].nexts.end()) {
                 nodes.push_back(TrieNode());
+                nodes[current].nexts.insert(std::make_pair(*chr, nodes.size() - 1));
                 current = nodes.size() - 1;
-                nodes[current].str = str;
             } else {
                 current = next->second;
             }
         }
+        nodes[current].str = str;
         nodes[current].units.push_back(unit);
     }
     void build() {
@@ -72,20 +74,20 @@ struct Automation {
         q.push(1);
         while (!q.empty()) {
             TrieNode &h = nodes[q.front()];
-            q.pop();
             for (auto it=h.nexts.begin(); it != h.nexts.end(); it++ ) {
                 size_t f = h.fail;
-                const char32_t &chr = it->first;
+                const char32_t chr = it->first;
                 while(nodes[f].nexts.find(chr) == nodes[f].nexts.end() && f != 1) {
                     f = nodes[f].fail;
                 }
-                if (nodes[f].nexts.find(chr) != nodes[f].nexts.end() && f != 1) {
+                if (nodes[f].nexts.find(chr) != nodes[f].nexts.end() && q.front() != 1) {
                     nodes[h.nexts[chr]].fail = nodes[f].nexts.find(chr)->second;
                 } else {
                     nodes[h.nexts[chr]].fail = 1;
                 }
                 q.push(h.nexts[chr]);
             }
+            q.pop();
         }
     }
     void find(const std::u32string &str) const {
@@ -97,7 +99,10 @@ struct Automation {
             }
             if (nodes[node].nexts.find(chr) != nodes[node].nexts.end()) {
                 node = nodes[node].nexts.find(chr)->second;
+            } else {
+              node = 1;
             }
+            std::cout << "i = " << i << "; node = " << node << "; node.fail = " << nodes[node].fail << std::endl;
             for (size_t f = node; f != 1; f = nodes[f].fail) {
                 if (nodes[f].str.length() == 0)
                     break;

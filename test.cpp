@@ -25,7 +25,6 @@ int main() {
   cout << "Build finish." << endl;
   while (cin >> buffer) {
     u32string line = pinyin_marker::converter.from_bytes(buffer);
-    cout << buffer << endl;
     acm.find(line);
   }
   return 0;
