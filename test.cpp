@@ -17,8 +17,9 @@ int main() {
     std::pair<std::u32string, pinyin_marker::PinyinUnit> line;
     line = pinyin_marker::parseline(pinyin_marker::converter.from_bytes(buffer));
     // cout << pinyin_marker::converter.to_bytes(line.first) << line.second << endl;
-    marker.aca.insert(line.first, line.second);
-    // break;
+    marker.aca.insert(line.first, [&line](vector<pinyin_marker::PinyinUnit> &data)->void{
+      data.push_back(line.second);
+    });
   }
   cout << marker.aca.nodes.size() << endl;
   cout << "Building." << endl;
