@@ -21,7 +21,7 @@ int main() {
       data.push_back(line.second);
     });
   }
-  cout << marker.aca.nodes.size() << endl;
+  // cout << marker.aca.nodes.size() << endl;
   cout << "Building." << endl;
   marker.aca.build();
   cout << "Build finish." << endl;
