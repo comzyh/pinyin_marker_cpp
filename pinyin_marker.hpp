@@ -15,20 +15,20 @@
 namespace pinyin_marker {
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 
-template<typename ElementT>
+template<typename PinyinT>
 struct PinyinUnit {
-  std::vector<ElementT> pinyin;
+  std::vector<PinyinT> pinyin;
   int freq;
   PinyinUnit() {}
-  PinyinUnit(std::vector<ElementT> &&pinyin, int freq) : pinyin(pinyin), freq(freq) {}
-  PinyinUnit(const std::vector<ElementT> &inyin, int freq) : pinyin(pinyin), freq(freq) {}
+  PinyinUnit(std::vector<PinyinT> &&pinyin, int freq) : pinyin(pinyin), freq(freq) {}
+  PinyinUnit(const std::vector<PinyinT> &inyin, int freq) : pinyin(pinyin), freq(freq) {}
   const size_t length() const {
     return pinyin.size();
   }
 };
 
-template<typename ElementT>
-std::ostream &operator<<(std::ostream &out, const PinyinUnit<ElementT> &unit) {
+template<typename PinyinT>
+std::ostream &operator<<(std::ostream &out, const PinyinUnit<PinyinT> &unit) {
   out << "[";
   for (auto it = unit.pinyin.begin(); it != unit.pinyin.end(); it++) {
     out << *it << ", ";
@@ -37,10 +37,10 @@ std::ostream &operator<<(std::ostream &out, const PinyinUnit<ElementT> &unit) {
   return out;
 }
 
-template<typename CharT, typename PyinT>
+template<typename CharT, typename PinyinT>
 struct PinyinMarker {
 public:
-  typedef PinyinUnit<PyinT> PinyinUnitType;
+  typedef PinyinUnit<PinyinT> PinyinUnitType;
   Automation<CharT, std::vector<PinyinUnitType> > aca;
   PinyinMarker() {
 
@@ -78,7 +78,7 @@ public:
       begin = i + 1;
     }
     pinyin.push_back(converter.to_bytes(pinyin_block.substr(begin, pinyin_block.length() - begin)));
-    //
+
     return std::make_pair(std::basic_string<CharT>(line, 0, p1),PinyinUnitType(std::move(pinyin), freq));
   }
 };

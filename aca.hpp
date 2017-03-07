@@ -26,13 +26,13 @@ struct Automation {
   ~Automation () {
     destory(root_node);
   }
-  void destory(NodeType *node){
+  void destory(NodeType *node){ // free all node recursively
     for (auto it=node->nexts.begin(); it != node->nexts.end(); it++ ) {
       destory(it->second);
     }
     delete node;
   }
-  void insert(const std::basic_string<CharT> &str, const std::function<void(DataT &data)> &callback) {
+  void insert(const std::basic_string<CharT> &str, const std::function<void(DataT &data)> &update_cb) {
     NodeType * current = root_node;
     for (auto chr = str.begin(); chr != str.end(); chr ++) {
       auto next = current->nexts.find(*chr);
@@ -45,7 +45,7 @@ struct Automation {
       }
     }
     current->str = str;
-    callback(current->data); // callback, to allow user to modify data
+    update_cb(current->data); // callback, to allow user to update data
   }
   void build() {
     std::queue<NodeType *> q;
