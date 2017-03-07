@@ -1,5 +1,5 @@
-#ifndef ACA_HPP
-#define ACA_HPP
+#ifndef ACA_H
+#define ACA_H
 #include <unordered_map>
 #include <utility>
 #include <vector>

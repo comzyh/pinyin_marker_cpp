@@ -6,12 +6,10 @@
 #include <iostream>
 #include <locale>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <queue>
 #include <functional>
-#include "aca.hpp"
+#include "aca.h"
 namespace pinyin_marker {
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 
