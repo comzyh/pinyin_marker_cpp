@@ -37,14 +37,15 @@ std::ostream &operator<<(std::ostream &out, const PinyinUnit<ElementT> &unit) {
   return out;
 }
 
+template<typename CharT, typename PyinT>
 struct PinyinMarker {
 public:
-  typedef PinyinUnit<std::string> PinyinUnitType;
-  Automation<char32_t, std::vector<PinyinUnitType> > aca;
+  typedef PinyinUnit<PyinT> PinyinUnitType;
+  Automation<CharT, std::vector<PinyinUnitType> > aca;
   PinyinMarker() {
 
   }
-  void mark(const std::u32string &str, std::vector<std::string> &result)const {
+  void mark(const std::basic_string<CharT> &str, std::vector<std::string> &result)const {
     std::vector<std::pair<size_t, int> /* length, freq */> compare(str.length());
     aca.find(str, [&compare, &result](const size_t index, const std::vector<PinyinUnitType> &data) -> void {
       for (auto unit_it = data.cbegin(); unit_it != data.cend(); unit_it ++) {
@@ -61,7 +62,7 @@ public:
       }
     });
   }
-  static std::pair<std::u32string, PinyinUnitType> parseline(const std::u32string &line) {
+  static std::pair<std::basic_string<CharT>, PinyinUnitType> parseline(const std::basic_string<CharT> &line) {
     size_t p1 = line.find('|');
     size_t p2 = line.find('|', p1 + 1);
 
@@ -69,20 +70,18 @@ public:
     sscanf(converter.to_bytes(line.substr(p2 + 1, line.length() - p2 - 1)).c_str(),"%d", &freq);
 
     // parse pinyin
-    std::u32string pinyin_block = line.substr(p1 + 1, p2 - p1 - 1);
+    std::basic_string<CharT> pinyin_block = line.substr(p1 + 1, p2 - p1 - 1);
     std::vector<std::string> pinyin;
     size_t begin = 0;
-    for (size_t i = pinyin_block.find(' '); i != std::u32string::npos; i = pinyin_block.find(' ', i + 1)) {
+    for (size_t i = pinyin_block.find(' '); i != std::basic_string<CharT>::npos; i = pinyin_block.find(' ', i + 1)) {
       pinyin.push_back( converter.to_bytes(pinyin_block.substr(begin, i - begin)));
       begin = i + 1;
     }
     pinyin.push_back(converter.to_bytes(pinyin_block.substr(begin, pinyin_block.length() - begin)));
     //
-    return std::make_pair(std::u32string(line, 0, p1),PinyinUnitType(std::move(pinyin), freq));
+    return std::make_pair(std::basic_string<CharT>(line, 0, p1),PinyinUnitType(std::move(pinyin), freq));
   }
 };
-
-
 }
 
 #endif
