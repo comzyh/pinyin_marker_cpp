@@ -7,9 +7,9 @@
 
 template <typename CharT, typename DataT>
 struct TrieNode {
-  std::unordered_map<CharT, TrieNode<CharT, DataT> *> nexts;
-  TrieNode<CharT, DataT> * fail;
-  std::basic_string<CharT> str;
+  std::unordered_map<CharT, TrieNode<CharT, DataT>*> nexts;
+  TrieNode<CharT, DataT> *fail, *parent;
+  CharT chr;
   DataT data;
   TrieNode () {
     fail = nullptr;
@@ -19,32 +19,34 @@ struct TrieNode {
 template <typename CharT, typename DataT>
 struct Automation {
   typedef TrieNode<CharT, DataT> NodeType;
-  NodeType * root_node = nullptr;
+  NodeType *root_node = nullptr;
   Automation () {
     root_node = new NodeType();
+    root_node->parent = nullptr;
   }
   ~Automation () {
     destory(root_node);
   }
-  void destory(NodeType *node){ // free all node recursively
-    for (auto it=node->nexts.begin(); it != node->nexts.end(); it++ ) {
+  void destory(NodeType *node) { // free all node recursively
+    for (auto it=node->nexts.begin(); it != node->nexts.end(); it++) {
       destory(it->second);
     }
     delete node;
   }
   void insert(const std::basic_string<CharT> &str, const std::function<void(DataT &data)> &update_cb) {
-    NodeType * current = root_node;
+    NodeType *current = root_node;
     for (auto chr = str.begin(); chr != str.end(); chr ++) {
       auto next = current->nexts.find(*chr);
       if (next == current->nexts.end()) {
         NodeType *new_node = new NodeType();
+        new_node->parent=current;
+        new_node->chr = *chr;
         current->nexts.insert(std::make_pair(*chr, new_node));
         current = new_node;
       } else {
         current = next->second;
       }
     }
-    current->str = str;
     update_cb(current->data); // callback, to allow user to update data
   }
   void build() {
@@ -53,27 +55,27 @@ struct Automation {
     q.push(root_node);
     while (!q.empty()) {
       NodeType *h = q.front();
-      for (auto it=h->nexts.begin(); it != h->nexts.end(); it++ ) {
-        NodeType * f = h->fail;
-        const char32_t chr = it->first;
-        while(f->nexts.find(chr) == f->nexts.end() && f != root_node) {
+      for (auto it = h->nexts.begin(); it != h->nexts.end(); it++ ) {
+        NodeType *f = h->fail;
+        const CharT chr = it->first;
+        while (f->nexts.find(chr) == f->nexts.end() && f != root_node) {
           f = f->fail;
         }
-        if (f->nexts.find(chr) != f->nexts.end() && q.front() != root_node) {
+        if (f->nexts.find(chr) != f->nexts.end() && h != root_node) {
           h->nexts[chr]->fail = f->nexts.find(chr)->second;
         } else {
           h->nexts[chr]->fail = root_node;
         }
-        q.push(h->nexts[chr]);
+        q.push(it->second);
       }
       q.pop();
     }
   }
   void find(const std::basic_string<CharT> &str, const std::function<void(size_t index, const DataT &data)> &callback) const {
-    NodeType * node = root_node;
+    NodeType *node = root_node;
     for (size_t i = 0; i < str.length(); i++) {
-      char32_t chr = str[i];
-      while(node->nexts.find(chr) == node->nexts.end() && node != root_node) {
+      CharT chr = str[i];
+      while (node->nexts.find(chr) == node->nexts.end() && node != root_node) {
         node = node->fail;
       }
       if (node->nexts.find(chr) != node->nexts.end()) {
