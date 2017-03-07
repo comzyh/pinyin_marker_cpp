@@ -14,10 +14,10 @@ int main() {
   pinyin_marker::PinyinMarker marker;
 
   while (getline(dictfile, buffer)) {
-    std::pair<std::u32string, pinyin_marker::PinyinUnit> line;
+    std::pair<std::u32string, pinyin_marker::PinyinUnit<string> > line;
     line = pinyin_marker::parseline(pinyin_marker::converter.from_bytes(buffer));
     // cout << pinyin_marker::converter.to_bytes(line.first) << line.second << endl;
-    marker.aca.insert(line.first, [&line](vector<pinyin_marker::PinyinUnit> &data)->void{
+    marker.aca.insert(line.first, [&line](vector<pinyin_marker::PinyinUnit<string> > &data)->void{
       data.push_back(line.second);
     });
   }
