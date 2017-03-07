@@ -4,28 +4,34 @@
 #include <locale>
 #include <string>
 #include <cstdio>
+#include <vector>
 using namespace std;
 int main() {
   std::ifstream dictfile("clean_janx_phrases.dat");
   std::string buffer;
   std::u32string line;
 
-  pinyin_marker::Automation acm;
+  pinyin_marker::PinyinMarker marker;
 
   while (getline(dictfile, buffer)) {
     std::pair<std::u32string, pinyin_marker::PinyinUnit> line;
     line = pinyin_marker::parseline(pinyin_marker::converter.from_bytes(buffer));
     // cout << pinyin_marker::converter.to_bytes(line.first) << line.second << endl;
-    acm.insert(line.first, line.second);
+    marker.aca.insert(line.first, line.second);
     // break;
   }
-  cout << acm.nodes.size() << endl;
+  cout << marker.aca.nodes.size() << endl;
   cout << "Building." << endl;
-  acm.build();
+  marker.aca.build();
   cout << "Build finish." << endl;
   while (cin >> buffer) {
     u32string line = pinyin_marker::converter.from_bytes(buffer);
-    acm.find(line);
+    vector<string> result(line.length());
+    marker.mark(line, result);
+    for (auto it = result.begin(); it != result.end(); it ++) {
+      cout << *it << ", ";
+    }
+    cout << endl;
   }
   return 0;
 }

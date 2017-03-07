@@ -40,7 +40,6 @@ std::ostream &operator<<(std::ostream &out, const PinyinUnit &unit) {
     out << "] = " << unit.freq;
     return out;
 }
-struct MarkUnit {};
 
 struct TrieNode {
     std::unordered_map<char32_t, size_t> nexts;
@@ -90,7 +89,7 @@ struct Automation {
             q.pop();
         }
     }
-    void find(const std::u32string &str) const {
+    void find(const std::u32string &str,const std::function<void(const size_t index, const PinyinUnit &unit)> &callback) const {
         size_t node = 1;
         for (size_t i = 0; i < str.length(); i++) {
             char32_t chr = str[i];
@@ -102,17 +101,38 @@ struct Automation {
             } else {
               node = 1;
             }
-            std::cout << "i = " << i << "; node = " << node << "; node.fail = " << nodes[node].fail << std::endl;
+            // std::cout << "i = " << i << "; node = " << node << "; node.fail = " << nodes[node].fail << std::endl;
             for (size_t f = node; f != 1; f = nodes[f].fail) {
                 if (nodes[f].str.length() == 0)
                     break;
                 std::cout << converter.to_bytes(nodes[f].str) << std::endl;
                 for (auto it = nodes[f].units.begin(); it != nodes[f].units.end(); it ++) {
-                    std:: cout << *it << std::endl;
+                    callback(i, *it);
                 }
             }
         }
     }
+};
+class PinyinMarker {
+public:
+  Automation aca;
+  PinyinMarker(){
+
+  }
+  void mark(const std::u32string &str, std::vector<std::string> &result)const {
+    std::vector<std::pair<size_t, int> /* length, freq */> compare(str.length());
+    aca.find(str, [&compare, &result](const size_t index, const pinyin_marker::PinyinUnit &unit) -> void {
+        const size_t pinyin_length =  unit.pinyin.size();
+        const size_t start_point = index - pinyin_length + 1;
+        for (size_t i = 0; i < pinyin_length; i++) {
+          size_t result_index = start_point + i;
+          if (std::make_pair(pinyin_length, unit.freq) > compare[result_index]) {
+            compare[result_index] = std::make_pair(pinyin_length, unit.freq);
+            result[result_index] = unit.pinyin[i];
+          }
+        }
+    });
+  }
 };
 std::pair<std::u32string, PinyinUnit> parseline(const std::u32string &line) {
     size_t p1 = line.find('|');
