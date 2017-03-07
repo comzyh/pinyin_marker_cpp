@@ -4,6 +4,7 @@
 #include <codecvt>
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <locale>
 #include <string>
 #include <utility>
@@ -22,6 +23,17 @@ struct PinyinUnit {
   PinyinUnit(const std::vector<PinyinT> &inyin, int freq) : pinyin(pinyin), freq(freq) {}
   const size_t length() const {
     return pinyin.size();
+  }
+  bool pinyin_equal(const PinyinUnit &unit) const {
+    if (unit.pinyin.size() != pinyin.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < pinyin.size(); i++) {
+      if (pinyin[i] != unit.pinyin[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 
@@ -79,7 +91,34 @@ public:
 
     return std::make_pair(std::basic_string<CharT>(line, 0, p1),PinyinUnitType(std::move(pinyin), freq));
   }
+  void insert(const std::basic_string<CharT> &str, const PinyinUnitType &unit) {
+    aca.insert(str, [&unit](std::vector<PinyinUnitType> &data)->void{
+      // deduplicate
+      for (size_t i = 0; i < data.size(); i++) {
+        if (unit.pinyin_equal(data[i])) {
+          data[i].freq += unit.freq;
+          return;
+        }
+      }
+      data.push_back(unit);
+    });
+  }
+  void build() {
+    aca.build();
+  }
 };
+void load_dicts_char32(PinyinMarker<char32_t, std::string> &marker, std::vector<std::string> filenames) {
+  std::string buffer;
+  for (auto filename : filenames) {
+    std::cout << "loading: " << filename << std::endl;
+    std::ifstream dictfile(filename);
+    while (getline(dictfile, buffer)) {
+      auto line = marker.parseline(converter.from_bytes(buffer));
+      marker.insert(line.first, line.second);
+    }
+  }
+}
+
 }
 
 #endif
